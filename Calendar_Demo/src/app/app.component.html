@@ -1,0 +1,35 @@
+<section>
+  <div [ngStyle] = "topHeaderStyle">
+    <div [ngStyle] = 'headerIconStyle'>
+        <button (click) = 'fetchPreviousMonthCalendar()'>
+            Previous
+          </button>
+    </div>
+    <div [ngStyle] = 'headerMiddleContentStyle'>
+        {{currentMonth}} , {{currentYear}}
+    </div>
+    <div [ngStyle] = "headerIconStyle">
+        <button (click) = 'fetchNextMonthCalendar()'>
+            Next
+          </button>
+    </div>
+  </div>
+  <div id = 'headerOfDays' name = 'headerOfDays' [ngStyle] = 'gridStyle'>
+    <div *ngFor = 'let dayHeader of weekDayHeader' [ngStyle] = 'calendarCellStyle'>
+      {{dayHeader}}
+    </div>
+  </div>
+  <div *ngFor = 'let week of weeksOfCurrentCalendarFetchedDates' [ngStyle] = 'gridStyle'>
+      <div *ngFor = 'let date of week' (click) = 'selectedDate(date)' [ngStyle] = 'calendarCellStyle'>
+        <div [ngStyle] = 'calendarCellNotInMonthStyle' *ngIf = '!isCurrentMonthDate(date.date)'>
+            {{date.date.date()}}
+        </div>
+        <div [ngStyle] = 'calendarCellSelectedStyle' *ngIf = 'isCurrentMonthDate(date.date) && date.isDateSelected'>
+            {{date.date.date()}}
+          </div>
+        <div [ngStyle] = 'calendarCellInMonthStyle' *ngIf = 'isCurrentMonthDate(date.date) && !date.isDateSelected'>
+            {{date.date.date()}}
+          </div>
+      </div>
+  </div>
+</section>
