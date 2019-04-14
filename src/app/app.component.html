@@ -1,33 +1,36 @@
 <section>
-  <div [ngStyle] = "topHeaderStyle">
-    <div [ngStyle] = 'headerIconStyle'>
+  <div [ngStyle] = "topCalendarHeaderStyle()">
+    <div [ngStyle] = 'headerSideCellsStyle()'>
         <button (click) = 'fetchPreviousMonthCalendar()'>
             Previous
           </button>
     </div>
-    <div [ngStyle] = 'headerMiddleContentStyle'>
+    <div [ngStyle] = 'headerContentStyle()'>
         {{currentMonth}} , {{currentYear}}
     </div>
-    <div [ngStyle] = "headerIconStyle">
+    <div [ngStyle] = "headerSideCellsStyle()">
         <button (click) = 'fetchNextMonthCalendar()'>
             Next
           </button>
     </div>
   </div>
-  <div id = 'headerOfDays' name = 'headerOfDays' [ngStyle] = 'gridStyle'>
-    <div *ngFor = 'let dayHeader of weekDayHeader' [ngStyle] = 'calendarCellStyle'>
+  <div id = 'headerOfDays' name = 'headerOfDays' [ngStyle] = 'stylesOfGrid()'>
+    <div *ngFor = 'let dayHeader of weekDayHeader' [ngStyle] = 'cellStyle()'>
       {{dayHeader}}
     </div>
   </div>
-  <div *ngFor = 'let week of weeksOfCurrentCalendarFetchedDates' [ngStyle] = 'gridStyle'>
-      <div *ngFor = 'let date of week' (click) = 'selectedDate(date)' [ngStyle] = 'calendarCellStyle'>
-        <div [ngStyle] = 'calendarCellNotInMonthStyle' *ngIf = '!isCurrentMonthDate(date.date)'>
+  <div *ngFor = 'let week of weeksOfCurrentCalendarFetchedDates' [ngStyle] = 'stylesOfGrid()'>
+      <div *ngFor = 'let date of week' (click) = 'selectedDate(date)' [ngStyle] = 'cellStyle()'>
+        <div [ngStyle] = 'selectedDateStyle()' *ngIf = '!isCurrentMonthDate(date.date) && date.isDateSelected'>
             {{date.date.date()}}
         </div>
-        <div [ngStyle] = 'calendarCellSelectedStyle' *ngIf = 'isCurrentMonthDate(date.date) && date.isDateSelected'>
+        <div [ngStyle] = 'notInMonthDatesCellStyle()' *ngIf = '!isCurrentMonthDate(date.date) && !date.isDateSelected'>
+            {{date.date.date()}}
+        </div>
+        <div [ngStyle] = 'selectedDateStyle()' *ngIf = 'isCurrentMonthDate(date.date) && date.isDateSelected'>
             {{date.date.date()}}
           </div>
-        <div [ngStyle] = 'calendarCellInMonthStyle' *ngIf = 'isCurrentMonthDate(date.date) && !date.isDateSelected'>
+        <div [ngStyle] = 'inMonthDatesCellStyle()' *ngIf = 'isCurrentMonthDate(date.date) && !date.isDateSelected'>
             {{date.date.date()}}
           </div>
       </div>

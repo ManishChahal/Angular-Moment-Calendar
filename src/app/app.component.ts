@@ -49,13 +49,9 @@ export class AppComponent implements OnInit, OnChanges {
    */
   @Output() sendSelectedDate : EventEmitter<any> = new EventEmitter();
   /**
-   * Object to be bound to grid for styling
+   * Indicator whether past date can be selected 
    */
-  public gridStyle = {};
-  /**
-   * Captures style for top header with previous and next button
-   */
-  public topHeaderStyle = {};
+  @Input() restrictPastDateSelection : boolean = false;
   /**
    * Captures current month from date
    */
@@ -65,54 +61,24 @@ export class AppComponent implements OnInit, OnChanges {
    */
   public currentYear : string = ''; 
   /**
-   * Captures style for each cell of the calendar grid i.e. for the numeric values and the day of the week indicator
-   */
-  public calendarCellStyle = {};
-  /**
-   * Captures style for left/right side icon of the top header
-   */
-  public headerIconStyle = {};
-  /**
-   * Captures style for middle content displayed in the top header
-   */
-  public headerMiddleContentStyle = {};
-  /**
-   * Captures style for not in month dates
-   */
-  public calendarCellNotInMonthStyle = {};
-   /**
-   * Captures style for in the month dates
-   */
-  public calendarCellInMonthStyle = {};
-  /**
-   * Captures styles for selected date
-   */
-  public calendarCellSelectedStyle = {};
-  /**
    * Captures the selected date, by default it is set to current date of month
    */
   public dateSelected = moment(this.currentDate);
+
   ngOnInit(){
-    // console.log(this.currentDate);
-    // console.log(this.currentDate.date());
-    // console.log(this.currentDate.day());
-    // console.log(this.currentDate.toDate());
-    // console.log(this.currentDate.startOf('month').day());
-    // console.log(this.currentDate.clone().startOf('month').subtract(this.currentDate.startOf('month').day() - 1,'days'));
-    // console.log(this.start);
-    // console.log(moment(this.startDayOfCalendar).date(1));
-    // this.fetchCalendarDays(this.currentDate);
-    this.generateCalendar();
+    let splicedWeekHeaderDays = this.weekDayHeader.splice(0,this.indexOfStartingDay);
+    this.weekDayHeader = [...this.weekDayHeader, ...splicedWeekHeaderDays];
+    this.generateCalendar(this.currentDate);
   }
 
   ngOnChanges(){
-    this.generateCalendar();
+    this.generateCalendar(this.currentDate);
   }
   /**
    * Fetches the dates that are to be rendered in the calendar
    * @param currentDate 
    */
-  public fetchCalendarDays(currentDate : moment.Moment) : void{
+  public generateCalendar(currentDate : moment.Moment) : void{
     this.startDayOfMonth = moment(currentDate).startOf('month').day();
     this.currentMonth = moment(currentDate).format('MMMM');
     this.currentYear = moment(currentDate).format('YYYY');
@@ -127,13 +93,10 @@ export class AppComponent implements OnInit, OnChanges {
       this.startDayOfCalendar = moment(currentDate).startOf('month').subtract(this.startDayOfMonth - (this.indexOfStartingDay - 7),'days');
       start = this.startDayOfCalendar.date();
     }
-    let splicedWeekHeaderDays = this.weekDayHeader.splice(0,this.indexOfStartingDay);
-    this.weekDayHeader = [...this.weekDayHeader, ...splicedWeekHeaderDays];
     /**
      * Looping over the calendar days array and creating a moment by adding the number of days to the start date
      */
-    for(let index = 0 ; index < this.calendarDays.length ; index ++)
-    {
+    for(let index = 0 ; index < this.calendarDays.length ; index ++) {
       /**
        * Setting value for each element of array
        */
@@ -143,65 +106,59 @@ export class AppComponent implements OnInit, OnChanges {
       /**
        * Setting is selected to true by default for current date
        */
-      if(dateObj["date"].month() === this.dateSelected.month() && dateObj["date"].date() === this.dateSelected.date() && dateObj["date"].year() === this.dateSelected.year())
-      {
+      if(this.datesEqual(dateObj['date'], this.dateSelected)) {
         dateObj["isDateSelected"] = true;
       }
       this.calendarDays[index] = dateObj;
     }
-    // console.log(this.startDayOfMonth);
-    // console.log(this.startDayOfCalendar);
-    // console.log(start);
-    // console.log(this.calendarDays);
     this.convertToWeeks();
   }
   /**
    * Handler to convert the selected dates of the calendar into array of arrays
    */
-  public convertToWeeks()
-  {
+  public convertToWeeks() : void {
     const weeksOfCalendar = [];
-    for(let index = 0; index < this.calendarDays.length; index++)
-    {
+    for(let index = 0; index < this.calendarDays.length; index++) {
       weeksOfCalendar.push(this.calendarDays.splice(0,7));
     }
     this.weeksOfCurrentCalendarFetchedDates = weeksOfCalendar;
   }
   /**
-   * Return all the days to be published in the calendar depending upon the user next or previous month click
-   */
-  public generateCalendar() : void{
-    this.fetchCalendarDays(this.currentDate);
-    this.stylesOfGrid();
-    this.topCalendarHeaderStyle();
-    this.cellStyle();
-    this.headerContentStyle();
-    this.headerSideCellsStyle();
-    this.notInMonthDatesCellStyle();
-    this.inMonthDatesCellStyle();
-    this.selectedDateStyle();
-  } 
-  /**
    * Subtracts one month from the current date and generates calendar accordingly
    */
   public fetchPreviousMonthCalendar() : void{
     this.currentDate = moment(this.currentDate).subtract(1,'month');
-    this.generateCalendar();
+    this.generateCalendar(this.currentDate);
   }
   /**
    * Adds one month to the current date and genertes calendar accordingly
    */
   public fetchNextMonthCalendar() : void{
     this.currentDate = moment(this.currentDate).add(1,'month');
-    this.generateCalendar();
+    this.generateCalendar(this.currentDate);
   }
   /**
    * Handler for the date selected
    * @param date 
    */
-  public selectedDate(date : moment.Moment) : void{
-    this.resetSetSelected(date);
-    this.sendSelectedDate.emit(date);
+  public selectedDate(date) : void {
+    if(this.restrictPastDateSelection){
+      if(this.isPastDate(date)){
+        return;
+      }
+    }
+
+    if(!this.datesEqual(date.date, this.dateSelected)){
+      this.resetSetSelected(date);
+      this.sendSelectedDate.emit(date);
+    }
+  }
+  /**
+   * Handler to check if date is in past
+   * @param date 
+   */
+  public isPastDate(date) : boolean {
+    return moment(date.date).isBefore(moment()) && !this.isTodaysDate(date.date);
   }
   /**
    * Handler to check if the date is of current month
@@ -214,25 +171,29 @@ export class AppComponent implements OnInit, OnChanges {
    * Handler to check if the date is today's date
    * @param date 
    */
-  public isTodaysDate(date : moment.Moment){
+  public isTodaysDate(date : moment.Moment) : boolean {
     return moment().isSame(moment(date),'day');
+  }
+  /**
+   * Handler to check if two dates are equal
+   * @param incomingDate 
+   * @param comparisonDate 
+   */
+  public datesEqual(incomingDate : moment.Moment, comparisonDate : moment.Moment) : boolean {
+    return moment(incomingDate).isSame(moment(comparisonDate), 'day');
   }
   /**
    * Reset selected to false for the previously selected date
    */
-  public resetSetSelected(date : moment.Moment){
+  public resetSetSelected(date : moment.Moment) : void {
     let outerIndex = 0;
     let innerIndex = 0;
-    for(let index = 0; index < this.weeksOfCurrentCalendarFetchedDates.length ; index++)
-    {
-      for(let key = 0; key < this.weeksOfCurrentCalendarFetchedDates[index].length; key++)
-      {
-        if(moment(this.weeksOfCurrentCalendarFetchedDates[index][key].date).month() === moment(this.dateSelected).month() && moment(this.weeksOfCurrentCalendarFetchedDates[index][key].date).date() === moment(this.dateSelected).date() && moment(this.weeksOfCurrentCalendarFetchedDates[index][key].date).year() === moment(this.dateSelected).year())
-        {
+    for(let index = 0; index < this.weeksOfCurrentCalendarFetchedDates.length ; index++) {
+      for(let key = 0; key < this.weeksOfCurrentCalendarFetchedDates[index].length; key++) {
+        if(this.datesEqual(this.weeksOfCurrentCalendarFetchedDates[index][key].date, this.dateSelected)) {
           this.weeksOfCurrentCalendarFetchedDates[index][key].isDateSelected = false;
         }
-        else if(this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date)
-        {
+        else if(this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date) {
           this.weeksOfCurrentCalendarFetchedDates[index][key].isDateSelected = true;
           outerIndex = index;
           innerIndex = key;
@@ -244,33 +205,31 @@ export class AppComponent implements OnInit, OnChanges {
 /**
  * Captures style for calendar grid
  */
-  public stylesOfGrid(){
-    const style = {
+  public stylesOfGrid() : Object {
+    return {
       'display' : 'flex',
       'justifyContent' : 'space-between',
       'width' : this.calendarGridWidth,
       'flexDirection' : 'row'
     }
-    this.gridStyle = style;
   }
   /**
    * Captures top level header style
    */
-  public topCalendarHeaderStyle(){
-    const style = {
+  public topCalendarHeaderStyle() : Object {
+    return {
       'display' : 'flex',
       'justifyContent' : 'space-between',
       'width' : this.calendarGridWidth,
       'height' : (parseInt(this.calendarGridHeight) / 8) + 'vh',
       'flexDirection' : 'row'
     } 
-    this.topHeaderStyle = style;
   }
   /**
    * Captures each cell style in the grid
    */
-  public cellStyle(){
-    const style = {
+  public cellStyle() : Object {
+    return {
       'width' : (parseInt(this.calendarGridWidth) / 7) + '%',
       'height' : (parseInt(this.calendarGridHeight) / 8) + 'vh',
       'textAlign' : 'center',
@@ -279,39 +238,36 @@ export class AppComponent implements OnInit, OnChanges {
       'alignItems' : 'center',
       'cursor' : 'pointer'
     }
-    this.calendarCellStyle = style;
   }
   /**
    * Captures styles for previous and next button
    */
-  public headerSideCellsStyle(){
-    const style = {
+  public headerSideCellsStyle() : Object {
+    return {
       'width' :  (parseInt(this.calendarGridWidth) / 7) + '%',
       'textAlign' : 'center',
       'display' : 'flex',
       'justifyContent' : 'center',
       'alignItems' : 'center'
     }
-    this.headerIconStyle = style;
   }
   /**
    * Captures styles for content in the top header
    */
-  public headerContentStyle(){
-    const style = {
+  public headerContentStyle() : Object {
+    return {
       'width' :  ((parseInt(this.calendarGridWidth) / 7) * 5) + '%',
       'textAlign' : 'center',
       'display' : 'flex',
       'justifyContent' : 'center',
       'alignItems' : 'center'
     }
-    this.headerMiddleContentStyle = style;
   }
   /**
    * Handler for not in the month dates
    */
-  public notInMonthDatesCellStyle(){
-    const style = {
+  public notInMonthDatesCellStyle() : Object {
+    return {
       'width' : '100%',
       'height' : '100%',
       'textAlign' : 'center',
@@ -320,13 +276,12 @@ export class AppComponent implements OnInit, OnChanges {
       'alignItems' : 'center',
       'color' : 'grey'
     }
-    this.calendarCellNotInMonthStyle = style;
   }
   /**
    * Handler for in month dates
    */
-  public inMonthDatesCellStyle(){
-    const style = {
+  public inMonthDatesCellStyle() : Object {
+    return {
       'width' : '100%',
       'height' : '100%',
       'textAlign' : 'center',
@@ -334,20 +289,21 @@ export class AppComponent implements OnInit, OnChanges {
       'justifyContent' : 'center',
       'alignItems' : 'center',
     }
-    this.calendarCellInMonthStyle = style;
   }
-
-  public selectedDateStyle(){
-    const style = {
+  /**
+   * Handler to set styles for selected date
+   */
+  public selectedDateStyle() : Object {
+    return {
       'width' : '100%',
       'height' : '100%',
       'textAlign' : 'center',
       'display' : 'flex',
+      'color' : 'white',
       'justifyContent' : 'center',
       'alignItems' : 'center',
-      'backgroundImage': 'linear-gradient(to right,blue,indigo,violet)',
+      'backgroundImage': ' linear-gradient(to right, rgba(0, 0, 0,1) 0%, rgba(63,81,181,1) 100%)',
       'borderRadius' : '5em'
     }
-    this.calendarCellSelectedStyle = style;
   }
 }
