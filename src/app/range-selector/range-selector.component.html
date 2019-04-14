@@ -1,0 +1,44 @@
+<section>
+    <div [ngStyle] = "topCalendarHeaderStyle()">
+      <div [ngStyle] = 'headerSideCellsStyle()'>
+          <button (click) = 'fetchPreviousMonthCalendar()'>
+              Previous
+            </button>
+      </div>
+      <div [ngStyle] = 'headerContentStyle()'>
+          {{currentMonth}} , {{currentYear}}
+      </div>
+      <div [ngStyle] = "headerSideCellsStyle()">
+          <button (click) = 'fetchNextMonthCalendar()'>
+              Next
+            </button>
+      </div>
+    </div>
+    <div id = 'headerOfDays' name = 'headerOfDays' [ngStyle] = 'stylesOfGrid()'>
+      <div *ngFor = 'let dayHeader of weekDayHeader' [ngStyle] = 'cellStyle()'>
+        {{dayHeader}}
+      </div>
+    </div>
+    <div *ngFor = 'let week of weeksOfCurrentCalendarFetchedDates' [ngStyle] = 'stylesOfGrid()'>
+        <div *ngFor = 'let date of week' (click) = 'selectedDate(date)' [ngStyle] = 'cellStyle()'>
+          <div [ngStyle] = 'selectedDateStyle()' *ngIf = '!isCurrentMonthDate(date.date) && (date.rangeStart || date.rangeEnd)'>
+              {{date.date.date()}}
+          </div>
+          <div [ngStyle] = 'inRangeStyles()' *ngIf = '!isCurrentMonthDate(date.date) && date.inRange'>
+              {{date.date.date()}}
+          </div>
+          <div [ngStyle] = 'notInMonthDatesCellStyle()' *ngIf = '!isCurrentMonthDate(date.date) && !date.rangeStart && !date.rangeEnd && !date.inRange'>
+              {{date.date.date()}}
+          </div>
+          <div [ngStyle] = 'selectedDateStyle()' *ngIf = 'isCurrentMonthDate(date.date) && (date.rangeStart || date.rangeEnd)'>
+              {{date.date.date()}}
+          </div>
+          <div [ngStyle] = 'inRangeStyles()' *ngIf = 'isCurrentMonthDate(date.date) && date.inRange'>
+              {{date.date.date()}}
+          </div>
+          <div [ngStyle] = 'inMonthDatesCellStyle()' *ngIf = 'isCurrentMonthDate(date.date) && !date.rangeStart && !date.rangeEnd && !date.inRange'>
+              {{date.date.date()}}
+          </div>
+        </div>
+    </div>
+  </section>

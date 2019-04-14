@@ -1,12 +1,12 @@
-import { Component, OnInit, Input, EventEmitter, Output, OnChanges } from '@angular/core';
+import { Component, OnInit, OnChanges, Input, Output, EventEmitter } from '@angular/core';
 import * as moment from 'moment';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.scss']
+  selector: 'app-range-selector',
+  templateUrl: './range-selector.component.html',
+  styleUrls: ['./range-selector.component.scss']
 })
-export class AppComponent implements OnInit, OnChanges {
+export class RangeSelectorComponent implements OnInit, OnChanges {
   title = 'app';
   /**
    * Captures the current date i.e. today's date
@@ -64,6 +64,18 @@ export class AppComponent implements OnInit, OnChanges {
    * Captures the selected date, by default it is set to current date of month
    */
   public dateSelected = moment(this.currentDate);
+  /**
+   * Caprtures start date of range
+   */
+  public rangeSelectionStart;
+  /**
+   * Caprtures end date of range
+   */
+  public rangeSelectionEnd;
+  /**
+   * Captures all dates between start and end
+   */
+  public withinRangeDates = [];
 
   ngOnInit(){
     let splicedWeekHeaderDays = this.weekDayHeader.splice(0,this.indexOfStartingDay);
@@ -106,11 +118,44 @@ export class AppComponent implements OnInit, OnChanges {
       /**
        * Setting is selected to true by default for current date
        */
-      if(this.datesEqual(dateObj['date'], this.dateSelected)) {
-        dateObj["isDateSelected"] = true;
+      if(!this.rangeSelectionStart && this.datesEqual(dateObj['date'], this.dateSelected)) {
+        dateObj["rangeStart"] = true;
+        this.rangeSelectionStart = dateObj;
+      }
+      else{
+        if(this.rangeSelectionStart && this.datesEqual(dateObj['date'], this.rangeSelectionStart.date)){
+          dateObj["rangeStart"] = true;
+          this.rangeSelectionStart = dateObj;
+        }
+        else{
+          dateObj["rangeStart"] = false;
+        }
+      }
+      /**
+       * Check if there is a range selected
+       */
+      if(!this.rangeSelectionEnd){
+        dateObj["rangeEnd"] = false;
+      }
+      else{
+        if(this.rangeSelectionEnd && this.datesEqual(dateObj['date'], this.rangeSelectionEnd.date)){
+          dateObj["rangeEnd"] = true;
+          this.rangeSelectionEnd = dateObj;
+        }
+        else{
+          dateObj["rangeEnd"] = false;
+        }
+      }
+
+      if(this.withinRangeDates.length){
+        dateObj['inRange'] = this.isDateInRange(dateObj['date']);
+      }
+      else{
+        dateObj['inRange'] = false;
       }
       this.calendarDays[index] = dateObj;
     }
+    console.log(this.calendarDays);
     this.convertToWeeks();
   }
   /**
@@ -147,11 +192,7 @@ export class AppComponent implements OnInit, OnChanges {
         return;
       }
     }
-
-    if(!this.datesEqual(date.date, this.dateSelected)){
       this.resetSetSelected(date);
-      this.sendSelectedDate.emit(date);
-    }
   }
   /**
    * Handler to check if date is in past
@@ -183,24 +224,81 @@ export class AppComponent implements OnInit, OnChanges {
     return moment(incomingDate).isSame(moment(comparisonDate), 'day');
   }
   /**
+   * Checks if date is in between start and end date
+   * @param date 
+   */
+  public isDateInRange(date) : boolean{
+    if(moment(this.rangeSelectionEnd.date).isBefore(moment(this.rangeSelectionStart.date, 'day'))) {
+      if(moment(date).isAfter(moment(this.rangeSelectionEnd.date, 'day')) && moment(date).isBefore(moment(this.rangeSelectionStart.date, 'day'))) {
+        return true;
+      }
+      else{
+        return false;
+      }
+    }
+
+    else if(moment(date).isAfter(moment(this.rangeSelectionStart.date, 'day')) && moment(date).isBefore(moment(this.rangeSelectionEnd.date, 'day'))){
+      return true;
+    }
+    else{
+      return false;
+    }
+  }
+  /**
    * Reset selected to false for the previously selected date
    */
   public resetSetSelected(date) : void {
-    let outerIndex = 0;
-    let innerIndex = 0;
+    if(!this.rangeSelectionStart || !this.rangeSelectionEnd){
+      if(!this.rangeSelectionStart){
+        this.setStartEndSetter(date, 0);
+      }
+      else{
+        this.setStartEndSetter(date, 1);
+        this.sendSelectedDate.emit({start : this.rangeSelectionStart, end : this.rangeSelectionEnd});
+        this.setStartEndSetter('', 2);
+      }
+    }
+    else{
+      this.rangeSelectionStart.rangeStart = false;
+      this.rangeSelectionEnd.rangeEnd = false;
+      this.rangeSelectionStart = '';
+      this.rangeSelectionEnd = '';
+      this.resetInRangeDates();
+      this.resetSetSelected(date);
+    }
+  }
+  /**
+   * Reset in range status to false for previous in range dates
+   */
+  public resetInRangeDates(){
+    for(let index =0 ; index < this.withinRangeDates.length ; index++){
+      this.withinRangeDates[index]['inRange'] = false;
+    }
+  }
+  /**
+   * Sets range start and end properties value
+   * @param date 
+   * @param identifier 
+   */
+  public setStartEndSetter(date, identifier : number){
     for(let index = 0; index < this.weeksOfCurrentCalendarFetchedDates.length ; index++) {
       for(let key = 0; key < this.weeksOfCurrentCalendarFetchedDates[index].length; key++) {
-        if(this.datesEqual(this.weeksOfCurrentCalendarFetchedDates[index][key].date, this.dateSelected)) {
-          this.weeksOfCurrentCalendarFetchedDates[index][key].isDateSelected = false;
+        if( identifier === 0 && this.datesEqual(this.weeksOfCurrentCalendarFetchedDates[index][key].date, date.date)) {
+          this.weeksOfCurrentCalendarFetchedDates[index][key].rangeStart = true;
+          this.rangeSelectionStart = this.weeksOfCurrentCalendarFetchedDates[index][key];
         }
-        else if(this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date) {
-          this.weeksOfCurrentCalendarFetchedDates[index][key].isDateSelected = true;
-          outerIndex = index;
-          innerIndex = key;
+        else if(identifier === 1 && this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date) {
+          this.weeksOfCurrentCalendarFetchedDates[index][key].rangeEnd = true;
+          this.rangeSelectionEnd =  this.weeksOfCurrentCalendarFetchedDates[index][key];
+        }
+        else if(identifier === 2){
+          if(this.isDateInRange(this.weeksOfCurrentCalendarFetchedDates[index][key].date)){
+            this.weeksOfCurrentCalendarFetchedDates[index][key]['inRange'] = true;
+            this.withinRangeDates.push(this.weeksOfCurrentCalendarFetchedDates[index][key]);
+          }
         }
       }
     }
-    this.dateSelected = moment(this.weeksOfCurrentCalendarFetchedDates[outerIndex][innerIndex].date);
   }
 /**
  * Captures style for calendar grid
@@ -306,4 +404,18 @@ export class AppComponent implements OnInit, OnChanges {
       'borderRadius' : '5em'
     }
   }
+
+  public inRangeStyles() : Object {
+    return {
+      'width' : '100%',
+      'height' : '100%',
+      'textAlign' : 'center',
+      'display' : 'flex',
+      'color' : 'white',
+      'justifyContent' : 'center',
+      'alignItems' : 'center',
+      'backgroundColor' : '#98AFC7'
+    }
+  }
+
 }
