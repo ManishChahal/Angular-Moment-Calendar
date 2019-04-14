@@ -228,15 +228,14 @@ export class RangeSelectorComponent implements OnInit, OnChanges {
    * @param date 
    */
   public isDateInRange(date) : boolean{
+    /**
+     * Checks if the end date is less than start date
+     */
     if(moment(this.rangeSelectionEnd.date).isBefore(moment(this.rangeSelectionStart.date, 'day'))) {
       if(moment(date).isAfter(moment(this.rangeSelectionEnd.date, 'day')) && moment(date).isBefore(moment(this.rangeSelectionStart.date, 'day'))) {
         return true;
       }
-      else{
-        return false;
-      }
     }
-
     else if(moment(date).isAfter(moment(this.rangeSelectionStart.date, 'day')) && moment(date).isBefore(moment(this.rangeSelectionEnd.date, 'day'))){
       return true;
     }
