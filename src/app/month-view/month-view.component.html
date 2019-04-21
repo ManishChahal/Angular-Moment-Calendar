@@ -1,0 +1,32 @@
+<section id = 'monthViewWrapper'>
+  <div id = 'headerWithYears' [ngStyle] = 'topCalendarHeaderStyle()'>
+    <div id = 'previousYearView' [ngStyle] = 'headerSideCellsStyle()'>
+      <button (click) = 'fetchPreviousYear()'>
+        Previous
+      </button>
+    </div>
+    <div id = 'yearReflector' [ngStyle] = 'headerSideCellsStyle()'>
+      {{currentMoment.format('YYYY')}}
+    </div>
+
+    <div id = 'nextYearView' [ngStyle] = 'headerSideCellsStyle()'>
+      <button (click) = 'fetchNextYear()'>
+        Next
+      </button>
+    </div>
+  </div>
+
+  <div id = 'monthsContainer'>
+    <div *ngFor = 'let quarter of viewBounds' [ngStyle] = 'stylesOfGrid()'>
+      <div *ngFor = 'let month of quarter' [ngStyle] = 'cellStyle()' (click) = 'selectedMonth(month)'>
+        <div *ngIf = 'month.isSelected' [ngStyle] = 'selectedDateStyle()'>
+            {{month.alias}}
+        </div>
+
+        <div *ngIf = '!month.isSelected'>
+            {{month.alias}}
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

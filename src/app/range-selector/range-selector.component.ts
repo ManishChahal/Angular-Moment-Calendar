@@ -286,7 +286,7 @@ export class RangeSelectorComponent implements OnInit, OnChanges {
           this.weeksOfCurrentCalendarFetchedDates[index][key].rangeStart = true;
           this.rangeSelectionStart = this.weeksOfCurrentCalendarFetchedDates[index][key];
         }
-        else if(identifier === 1 && this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date) {
+        else if(identifier === 1 && this.datesEqual(this.weeksOfCurrentCalendarFetchedDates[index][key].date === date.date)) {
           this.weeksOfCurrentCalendarFetchedDates[index][key].rangeEnd = true;
           this.rangeSelectionEnd =  this.weeksOfCurrentCalendarFetchedDates[index][key];
         }
