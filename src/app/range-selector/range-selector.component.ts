@@ -183,6 +183,17 @@ export class RangeSelectorComponent implements OnInit, OnChanges {
     this.currentDate = moment(this.currentDate).add(1,'month');
     this.generateCalendar(this.currentDate);
   }
+   /**
+   * Check if date exists between in the array
+   * @param date 
+   */
+  public checkIfDateExistInRanges(date){
+    if(moment(date.date).isSameOrAfter(moment(this.withinRangeDates[0], 'day')) 
+        && moment(date.date).isSameOrBefore(moment(this.withinRangeDates[this.withinRangeDates.length - 1]))){
+      return;
+    }
+    this.withinRangeDates.push(date);
+  }
   /**
    * Handler for the date selected
    * @param date 
