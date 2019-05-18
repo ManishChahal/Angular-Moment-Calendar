@@ -96,12 +96,11 @@ export class RangeSelectorComponent implements OnInit, OnChanges {
     this.currentYear = moment(currentDate).format('YYYY');
     this.calendarDays = Array(42);
     let start;
-    if(this.indexOfStartingDay < this.startDayOfMonth)
-    {
+    if(this.indexOfStartingDay < this.startDayOfMonth) {
       this.startDayOfCalendar = moment(currentDate).startOf('month').subtract(this.startDayOfMonth - this.indexOfStartingDay,'days');
       start = this.startDayOfCalendar.date();
     }
-    else{
+    else {
       this.startDayOfCalendar = moment(currentDate).startOf('month').subtract(this.startDayOfMonth - (this.indexOfStartingDay - 7),'days');
       start = this.startDayOfCalendar.date();
     }
@@ -113,49 +112,51 @@ export class RangeSelectorComponent implements OnInit, OnChanges {
        * Setting value for each element of array
        */
       const dateObj = {};
-      dateObj["date"] = moment(this.startDayOfCalendar).date(start + index);
-      dateObj["todaysDate"] = this.isTodaysDate(dateObj["date"]);
+      dateObj['date'] = moment(this.startDayOfCalendar).date(start + index);
+      dateObj['todaysDate'] = this.isTodaysDate(dateObj['date']);
       /**
        * Setting is selected to true by default for current date
        */
       if(!this.rangeSelectionStart && this.datesEqual(dateObj['date'], this.dateSelected)) {
-        dateObj["rangeStart"] = true;
+        dateObj['rangeStart'] = true;
         this.rangeSelectionStart = dateObj;
       }
       else{
         if(this.rangeSelectionStart && this.datesEqual(dateObj['date'], this.rangeSelectionStart.date)){
-          dateObj["rangeStart"] = true;
+          dateObj['rangeStart'] = true;
           this.rangeSelectionStart = dateObj;
         }
         else{
-          dateObj["rangeStart"] = false;
+          dateObj['rangeStart'] = false;
         }
       }
       /**
        * Check if there is a range selected
        */
       if(!this.rangeSelectionEnd){
-        dateObj["rangeEnd"] = false;
+        dateObj['rangeEnd'] = false;
       }
       else{
         if(this.rangeSelectionEnd && this.datesEqual(dateObj['date'], this.rangeSelectionEnd.date)){
-          dateObj["rangeEnd"] = true;
+          dateObj['rangeEnd'] = true;
           this.rangeSelectionEnd = dateObj;
         }
         else{
-          dateObj["rangeEnd"] = false;
+          dateObj['rangeEnd'] = false;
         }
       }
 
       if(this.withinRangeDates.length){
         dateObj['inRange'] = this.isDateInRange(dateObj['date']);
+        if(dateObj['inRange']){
+          this.checkIfDateExistInRanges(dateObj);
+        }
       }
       else{
         dateObj['inRange'] = false;
       }
       this.calendarDays[index] = dateObj;
     }
-    console.log(this.calendarDays);
     this.convertToWeeks();
   }
   /**
